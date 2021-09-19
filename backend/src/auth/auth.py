@@ -13,22 +13,25 @@ def requires_auth(permission=''):
         return wrapper
     return requires_auth_decorator
 
+
 AUTH0_DOMAIN = 'mhassan.us.auth0.com'
 ALGORITHMS = ['RS256']
 API_AUDIENCE = 'coffee-shop'
 
-## AuthError Exception
+# AuthError Exception
 '''
 AuthError Exception
 A standardized way to communicate auth failure modes
 '''
+
+
 class AuthError(Exception):
     def __init__(self, error, status_code):
         self.error = error
         self.status_code = status_code
 
 
-## Auth Header
+# Auth Header
 
 def get_token_auth_header():
     auth_header = request.headers.get('Authorization', None)
@@ -44,7 +47,7 @@ def get_token_auth_header():
         raise AuthError({
             "code": "invalid_header",
             "description": "Auth Header is malformed"
-            }, 401)
+        }, 401)
 
     return header_parts[1]
 
@@ -58,15 +61,14 @@ def check_permissions(permission, payload):
         }, 403)
     if permission not in payload_permissions:
         raise AuthError({
-            "code":"no_permission",
+            "code": "no_permission",
             "description": "Not allowed permission"
-            }, 403)
+        }, 403)
     return True
 
 
-
 def verify_decode_jwt(token):
-    jsonurl = urlopen("https://"+AUTH0_DOMAIN+"/.well-known/jwks.json")
+    jsonurl = urlopen("https://" + AUTH0_DOMAIN + "/.well-known/jwks.json")
     jwks = json.loads(jsonurl.read())
     unverified_header = jwt.get_unverified_header(token)
     rsa_key = {}
@@ -92,7 +94,7 @@ def verify_decode_jwt(token):
                 algorithms=ALGORITHMS,
                 audience=API_AUDIENCE,
                 issuer='https://' + AUTH0_DOMAIN + '/'
-                )
+            )
             return payload
 
         except jwt.ExpiredSignatureError:
@@ -114,7 +116,6 @@ def verify_decode_jwt(token):
         "code": "invalid_token_header",
         "description": "can not find the appropriate key"
     }, 401)
-
 
 
 def requires_auth(permission=''):

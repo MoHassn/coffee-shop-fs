@@ -19,9 +19,10 @@ CORS(app)
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
 !! Running this funciton will add one
 '''
-# db_drop_and_create_all()
+db_drop_and_create_all()
 
 # ROUTES
+
 
 @app.route('/drinks')
 def get_drinks():
@@ -32,18 +33,22 @@ def get_drinks():
             "success": True,
             "drinks": drinks_short
         }), 200
-    except:
+    except BaseException:
         traceback.print_exc()
         abort(500)
+
 
 '''
 @TODO implement endpoint
     GET /drinks-detail
         it should require the 'get:drinks-detail' permission
         it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
+    returns status code 200 and json {"success": True, "drinks": drinks}
+    where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+
+
 @app.route('/drinks-detail')
 @requires_auth(permission='get:drinks-detail')
 def get_drinks_detail(payload):
@@ -56,10 +61,9 @@ def get_drinks_detail(payload):
             "success": True,
             "drinks": drinks_short
         }), 200
-    except:
+    except BaseException:
         traceback.print_exc()
         abort(500)
-
 
 
 @app.route('/drinks', methods=['POST'])
@@ -77,8 +81,6 @@ def create_drink(payload):
     }), 201
 
 
-
-
 @app.route('/drinks/<int:id>', methods=['PATCH'])
 @requires_auth(permission='patch:drinks')
 def update_drink(payload, id):
@@ -91,18 +93,16 @@ def update_drink(payload, id):
         recipe = body.get('recipe')
         if title:
             drink.title = title
-        if  recipe:
+        if recipe:
             drink.recipe = json.dumps(recipe)
         drink.update()
         return jsonify({
             "success": True,
             "drinks": [drink.long()]
         }), 200
-    except:
+    except BaseException:
         traceback.print_exc()
         abort(500)
-
-
 
 
 @app.route('/drinks/<int:id>', methods=['DELETE'])
@@ -117,7 +117,7 @@ def delete_drink(payload, id):
             "success": True,
             "delete": id
         }), 200
-    except:
+    except BaseException:
         traceback.print_exc()
         abort(500)
 
@@ -145,18 +145,28 @@ def handle_not_found(error):
         "message": "resource not found"
     }), 404
 
+
 @app.errorhandler(500)
 def handle_server_error(error):
     return jsonify({
         "success": False,
         "error": 500,
-        "message": "Internal Server Error. Check the server logs to see what happend"
+        "message": "Internal Server Error. "
+        "Check the server logs to see what happend"
     }), 500
+
 
 '''
 @TODO implement error handler for AuthError
     error handler should conform to general task above
 '''
+
+
 @app.errorhandler(AuthError)
 def handle_auth_errors(exception):
     return jsonify(exception.error), exception.status_code
+
+
+@app.route('/error')
+def error():
+    abort(500)
