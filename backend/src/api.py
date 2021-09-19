@@ -50,13 +50,14 @@ def get_drinks_detail(payload):
     try:
         drinks = Drink.query.all()
         for drink in drinks:
-            print(drink)
+            print("drink long", drink.long())
         drinks_short = [drink.long() for drink in drinks]
         return jsonify({
             "success": True,
             "drinks": drinks_short
         }), 200
     except:
+        traceback.print_exc()
         abort(500)
 
 
@@ -66,7 +67,7 @@ def get_drinks_detail(payload):
 def create_drink(payload):
     body = request.get_json()
     title = body['title']
-    recipe = json.dumps([body['recipe']])
+    recipe = json.dumps(body['recipe'])
 
     drink = Drink(title=title, recipe=recipe)
     drink.insert()
@@ -91,7 +92,7 @@ def update_drink(payload, id):
         if title:
             drink.title = title
         if  recipe:
-            drink.recipe = json.dumps([recipe])
+            drink.recipe = json.dumps(recipe)
         drink.update()
         return jsonify({
             "success": True,
@@ -128,7 +129,7 @@ Example error handling for unprocessable entity
 
 
 @app.errorhandler(422)
-def unprocessable(error):
+def handle_unprocessable(error):
     return jsonify({
         "success": False,
         "error": 422,
@@ -136,24 +137,26 @@ def unprocessable(error):
     }), 422
 
 
-'''
-@TODO implement error handlers using the @app.errorhandler(error) decorator
-    each error handler should return (with approprate messages):
-             jsonify({
-                    "success": False,
-                    "error": 404,
-                    "message": "resource not found"
-                    }), 404
+@app.errorhandler(404)
+def handle_not_found(error):
+    return jsonify({
+        "success": False,
+        "error": 404,
+        "message": "resource not found"
+    }), 404
 
-'''
-
-'''
-@TODO implement error handler for 404
-    error handler should conform to general task above
-'''
-
+@app.errorhandler(500)
+def handle_server_error(error):
+    return jsonify({
+        "success": False,
+        "error": 500,
+        "message": "Internal Server Error. Check the server logs to see what happend"
+    }), 500
 
 '''
 @TODO implement error handler for AuthError
     error handler should conform to general task above
 '''
+@app.errorhandler(AuthError)
+def handle_auth_errors(exception):
+    return jsonify(exception.error), exception.status_code
